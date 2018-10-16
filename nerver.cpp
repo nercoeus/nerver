@@ -21,6 +21,7 @@ int main(int argc, char **argv)
     socklen_t clilen;
     ner_connect *connect_data;
 
+
     /*初始化epoll*/
     epoll_fd = epoll_init(SERVER_SIZE + 1);
     if (epoll_fd < 0)
