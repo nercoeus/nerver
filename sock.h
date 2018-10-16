@@ -20,6 +20,7 @@ struct ThreadData{
     int ser_fd;
     int cli_fd;
     int epl_fd;
+    void (*callback)(void *ev_arg);
 };
 
 int socket_init(int port)

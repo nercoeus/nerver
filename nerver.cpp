@@ -6,22 +6,20 @@
 #include "sock.h"
 #include "epoll.h"
 #include "def.h"
+#include "connect.h"
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     /*数据初始化*/
     int epoll_fd;
     ner_threadpool *pool;
-    int server_fd;
-    int client_fd;
-    int sock_fd;
+    int server_fd, client_fd, sock_fd;
     struct sockaddr_in client_addr;
     char buf[MAXLINE];
     struct epoll_event event;
     struct epoll_event events[20];
-    int nums;
     socklen_t clilen;
-    ThreadData arg_data;
+    ner_connect *connect_data;
 
     /*初始化epoll*/
     epoll_fd = epoll_init(SERVER_SIZE + 1);
@@ -44,8 +42,12 @@ int main(int argc, char** argv)
         return 1;
     }
     /*将监听套接字添加进epoll*/
-    event.data.fd = server_fd;
     event.events = EPOLLIN | EPOLLET;
+    connect_data = new ner_connect();
+    connect_data->setFd(server_fd);
+    cout<<server_fd<<endl;
+    event.data.fd = server_fd;
+    event.data.ptr = (void *)connect_data;
     epoll_add(epoll_fd, server_fd, &event);
 
     //设置套接字为非阻塞模式
@@ -55,8 +57,8 @@ int main(int argc, char** argv)
     }
     while (1)
     {
-        nums = ner_epoll_wait(epoll_fd, events, MAXEVENTS, -1);
-        printf("num : %d\n", nums);
+        int nums = ner_epoll_wait(epoll_fd, events, MAXEVENTS, -1);
+        printf("num : %d %d\n", nums, events[0].data.fd);
         if (nums == -1 && errno == EINTR)
         {
             continue;
@@ -66,13 +68,24 @@ int main(int argc, char** argv)
         {
             if (events[i].data.fd == server_fd)
             {
+                cout<<"accept"<<endl;
                 sock_fd = sock_accept(server_fd, (struct sockaddr *)&client_addr, &clilen);
                 setSockNoBlocking(sock_fd);
                 event.events = EPOLLIN | EPOLLET;
                 event.data.fd = sock_fd;
+                connect_data = new ner_connect(sock_fd, epoll_fd);
+                event.data.ptr = (void *)connect_data;
                 epoll_add(epoll_fd, sock_fd, &event);
             }
-            else
+            else if (events[i].events & EPOLLIN)
+            {
+                printf("EPOLLIN\n");
+                char buf[1024];
+                read(events[i].data.fd, buf, 1024);
+                cout << buf << endl;
+                bzero(buf, 1024);
+            }
+            else if (events[i].events & EPOLLOUT)
             {
             }
         }

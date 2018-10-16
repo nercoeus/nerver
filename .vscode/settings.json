@@ -26,6 +26,9 @@
         "algorithm": "cpp",
         "__config": "cpp",
         "__nullptr": "cpp",
-        "cstddef": "cpp"
+        "cstddef": "cpp",
+        "__mutex_base": "cpp",
+        "memory": "cpp",
+        "mutex": "cpp"
     }
 }

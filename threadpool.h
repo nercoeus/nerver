@@ -27,7 +27,7 @@ typedef enum
 } ner_threadpool_shutdown;
 
 //任务结构体,包含函数指针以及参数列表
-typedef struct ner_task
+struct ner_task
 {
     void (*func)(void *);
     void *arg;
