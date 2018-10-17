@@ -19,5 +19,5 @@ int ner_connect::getFd(){
 }
 
 void ner_connect::handle(){
-    printf("handle \n");
+    printf("handle %lu\n", pthread_self());
 }

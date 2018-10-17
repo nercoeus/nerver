@@ -117,7 +117,8 @@ void handle_func(void* data){
     int n = 0;
     string http_str;
     while(1){
-        if(n = read(client_fd, buf, sizeof(buf)) > 0){
+        n = read(client_fd, buf, sizeof(buf));
+        if(n > 0){
             nread+=n;
             http_str += buf;
             bzero(buf, sizeof(buf));

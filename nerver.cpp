@@ -20,7 +20,6 @@ int main(int argc, char **argv)
     ner_threadpool *pool;
     int server_fd, client_fd, sock_fd;
     struct sockaddr_in client_addr;
-    char buf[MAXLINE];
     struct epoll_event event;
     struct epoll_event events[20];
     socklen_t clilen;

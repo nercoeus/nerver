@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include "def.h"
+#include "pthread.h"
 
 struct ner_connect
 {
