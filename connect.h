@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string>
 #include <stdlib.h>
+#include <unordered_map>
 #include "def.h"
 #include "pthread.h"
 #include "util.h"
@@ -19,6 +20,8 @@ private:
     int http_ver;
     std::string content;
     std::string file_name;
+    std::unordered_map<std::string, std::string> headers;
+    
 public:
     ner_connect();
     ner_connect(int _fd, int _epoll_fd);
@@ -26,6 +29,7 @@ public:
     int getFd();
     void setFd(int fd);
     int parseURI();
+    int parseHeader();
 };
 
 #endif
