@@ -79,6 +79,7 @@ int main(int argc, char **argv)
                 event.events = EPOLLIN | EPOLLET;
                 connect_data = new ner_connect(client_fd, epoll_fd);
                 event.data.ptr = (void *)connect_data;
+                printf("add new sockfd : %d\n", client_fd);
                 epoll_add(epoll_fd, client_fd, &event);
             }
             else

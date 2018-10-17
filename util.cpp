@@ -1,16 +1,19 @@
 #include "util.h"
 #include <errno.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <string.h>
 
 ssize_t readn(int fd, void *buf, size_t n)
 {
+    printf("fd : %d, n : %lu\n", fd, n);
     size_t nleft = n;
     ssize_t nread = 0;
     ssize_t readsum = 0;
     char *ptr = (char *)buf;
 
     while(nleft > 0){
-        if((nread = read(fd, buf, nleft)) < 0){
+        if((nread = read(fd, ptr, nleft)) < 0){
             if(errno == EAGAIN){
                 return readsum;
             }else if(errno == EINTR){
@@ -23,9 +26,11 @@ ssize_t readn(int fd, void *buf, size_t n)
         else if(nread == 0){
             break;
         }
+        nread = strlen(ptr);
         readsum += nread;
         ptr += nread;
         nleft -= nread;
+        printf("readsum : %lu, n : %lu, buf:%s\n", readsum, nread, buf);
     }
     return readsum;
 }

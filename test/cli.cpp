@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
+using namespace std;
 int main(int argc, char **argv)
 {
     printf("begin\n");
@@ -40,13 +41,13 @@ int main(int argc, char **argv)
             char buf[1024];
             char get[1024];
             fprintf(stderr, "please write data %s\n", buf);
-            std::cin>>buf;
-            write(clientfd, buf, 1024);
+            fgets(buf, sizeof(buf), stdin);
+            write(clientfd, buf, sizeof(buf));
+            printf("%s, %lu\n", buf, strlen(buf));
             fprintf(stderr, "数据写入完毕 %s\n", buf);
             //read(clientfd, get, sizeof(get));
             //fprintf(stderr, "read data: data %s\n", get);
-            bzero(buf, sizeof(buf));
-            bzero(get, sizeof(get));
+            bzero(buf, 1024);
         }
     }
     return 0;
