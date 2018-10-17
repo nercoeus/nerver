@@ -8,6 +8,11 @@
 #include "def.h"
 #include "connect.h"
 
+void ner_handle(void *arg){
+    ner_connect* con = (ner_connect*) arg;
+    con->handle();
+}
+
 int main(int argc, char **argv)
 {
     /*数据初始化*/
@@ -47,7 +52,6 @@ int main(int argc, char **argv)
     connect_data = new ner_connect();
     connect_data->setFd(server_fd);
     cout<<server_fd<<endl;
-    event.data.fd = server_fd;
     event.data.ptr = (void *)connect_data;
     epoll_add(epoll_fd, server_fd, &event);
 
@@ -59,7 +63,7 @@ int main(int argc, char **argv)
     while (1)
     {
         int nums = ner_epoll_wait(epoll_fd, events, MAXEVENTS, -1);
-        printf("num : %d %d\n", nums, events[0].data.fd);
+        cout<<"nums: "<<nums<<" fd: "<<server_fd<<endl;
         if (nums == -1 && errno == EINTR)
         {
             continue;
@@ -67,27 +71,26 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < nums; i++)
         {
-            if (events[i].data.fd == server_fd)
+            ner_connect* tconnect = (ner_connect*)(events[i].data.ptr);
+            sock_fd = tconnect->getFd();
+            if (sock_fd == server_fd)
             {
-                cout<<"accept"<<endl;
-                sock_fd = sock_accept(server_fd, (struct sockaddr *)&client_addr, &clilen);
-                setSockNoBlocking(sock_fd);
+                client_fd = sock_accept(server_fd, (struct sockaddr *)&client_addr, &clilen);
+                setSockNoBlocking(client_fd);
                 event.events = EPOLLIN | EPOLLET;
-                event.data.fd = sock_fd;
-                connect_data = new ner_connect(sock_fd, epoll_fd);
+                connect_data = new ner_connect(client_fd, epoll_fd);
                 event.data.ptr = (void *)connect_data;
-                epoll_add(epoll_fd, sock_fd, &event);
+                epoll_add(epoll_fd, client_fd, &event);
             }
-            else if (events[i].events & EPOLLIN)
+            else
             {
-                printf("EPOLLIN\n");
-                char buf[1024];
-                read(events[i].data.fd, buf, 1024);
-                cout << buf << endl;
-                bzero(buf, 1024);
-            }
-            else if (events[i].events & EPOLLOUT)
-            {
+                if ((events[i].events & EPOLLERR) || (events[i].events & EPOLLHUP)
+                || (!(events[i].events & EPOLLIN)))
+                {
+                    printf("error event\n");
+                    continue;
+                }
+                threadpool_add(pool, ner_handle, events[i].data.ptr);
             }
         }
 

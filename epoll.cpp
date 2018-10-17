@@ -1,13 +1,13 @@
 #include "epoll.h"
 
-struct epoll_event* events;
+//struct epoll_event* events;
 
 int epoll_init(int flags){
     int epoll_fd = epoll_create(flags);
     if(epoll_fd < 0){
         return -1;
     }
-    events = new epoll_event[MAXEVENTS];
+    //events = new epoll_event[MAXEVENTS];
     return epoll_fd;
 }
 

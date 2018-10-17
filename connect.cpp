@@ -13,3 +13,11 @@ ner_connect::ner_connect(int _fd, int _epoll_fd)
 void ner_connect::setFd(int _fd){
     this->fd = _fd;
 }
+
+int ner_connect::getFd(){
+    return this->fd;
+}
+
+void ner_connect::handle(){
+    printf("handle \n");
+}
