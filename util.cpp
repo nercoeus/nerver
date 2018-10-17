@@ -30,7 +30,7 @@ ssize_t readn(int fd, void *buf, size_t n)
         readsum += nread;
         ptr += nread;
         nleft -= nread;
-        printf("readsum : %lu, n : %lu, buf:%s\n", readsum, nread, buf);
+        printf("readsum : %lu, n : %lu, buf:\n%s\n", readsum, nread, buf);
     }
     return readsum;
 }
