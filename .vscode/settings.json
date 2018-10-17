@@ -29,6 +29,8 @@
         "cstddef": "cpp",
         "__mutex_base": "cpp",
         "memory": "cpp",
-        "mutex": "cpp"
+        "mutex": "cpp",
+        "fstream": "cpp",
+        "locale": "cpp"
     }
 }

@@ -1,6 +1,39 @@
 #include "connect.h"
 #include <iostream>
+#include <sys/stat.h>
 using namespace std;
+
+unordered_map<std::string, std::string> ner_mime = 
+{
+	{".html", "text/html"},
+	{".xml", "text/xml"},
+	{".xhtml", "application/xhtml+xml"},
+	{".txt", "text/plain"},
+	{".rtf", "application/rtf"},
+	{".pdf", "application/pdf"},
+	{".word", "application/msword"},
+	{".png", "image/png"},
+	{".gif", "image/gif"},
+	{".jpg", "image/jpeg"},
+	{".jpeg", "image/jpeg"},
+	{".au", "audio/basic"},
+	{".mpeg", "video/mpeg"},
+	{".mpg", "video/mpeg"},
+	{".avi", "video/x-msvideo"},
+	{".gz", "application/x-gzip"},
+	{".tar", "application/x-tar"}
+};
+
+inline string ner_mime_type2value(string type)
+{
+	for(unordered_map<string, string>::iterator i = ner_mime.begin(); i != ner_mime.end(); ++i)
+	{
+		if(type == i->first)
+			return i->second;
+	}
+	return NULL;
+}
+
 ner_connect::ner_connect()
     : fd(0), epoll_fd(0), state(STATE_PARSE_URI), mark(0), method(0)
 {
@@ -81,28 +114,12 @@ void ner_connect::handle()
         if(state == STATE_RECV_BODY){
             //
         }
-        /*
+        
         if (state == STATE_ANALYSIS)
         {
-            int flag = this->analysisRequest();
-            if (flag < 0)
-            {
-                isError = true;
-                break;
-            }
-            else if (flag == ANALYSIS_SUCCESS)
-            {
-
-                state = STATE_FINISH;
-                break;
-            }
-            else
-            {
-                isError = true;
-                break;
-            }
+            int flag = this->httpConnect();
         }
-        */
+        
     }
 }
 
@@ -249,4 +266,58 @@ int ner_connect::parseHeader()
     }
     cout<<"header : **************************************8"<<endl;
     return PARSER_SUCCESS;
+}
+
+int ner_connect::httpConnect(){
+    if (method == METHOD_GET)
+    {
+        cout<<"connect !!!"<<endl;
+        char header[MAXLINE];
+        sprintf(header, "HTTP/1.1 %d %s\r\n", 200, "OK");
+        if(headers.find("Connection") != headers.end() && headers["Connection"] == "keep-alive")
+        {
+            keep_alive = true;
+            sprintf(header, "%sConnection: keep-alive\r\n", header);
+            sprintf(header, "%sKeep-Alive: timeout=%d\r\n", header, WAIT_TIME);
+        }
+
+        int dot_pos = file_name.find('.');
+        const char* filetype;
+        std::string temp = "default";
+        if (dot_pos < 0) 
+            filetype = ner_mime_type2value(temp).c_str();
+        else
+            filetype = ner_mime_type2value(file_name.substr(dot_pos)).c_str();
+        struct stat sbuf;
+        if (stat(file_name.c_str(), &sbuf) < 0)
+        {
+            //handleError(fd, 404, "Not Found!");
+            return -1;
+        }
+
+        sprintf(header, "%sContent-type: %s\r\n", header, filetype);
+        // 通过Content-length返回文件大小
+        sprintf(header, "%sContent-length: %ld\r\n", header, sbuf.st_size);
+
+        sprintf(header, "%s\r\n", header);
+        size_t send_len = (size_t)writen(fd, header, strlen(header));
+        if(send_len != strlen(header))
+        {
+            perror("Send header failed");
+            return -1;
+        }
+        int src_fd = open(file_name.c_str(), 00, 0);
+        char *src_addr = static_cast<char*>(mmap(NULL, sbuf.st_size, PROT_READ, MAP_PRIVATE, src_fd, 0));
+        close(src_fd);
+    
+        // 发送文件并校验完整性
+        send_len = writen(fd, src_addr, sbuf.st_size);
+        if(send_len != sbuf.st_size)
+        {
+            perror("Send file failed");
+            return -1;
+        }
+        munmap(src_addr, sbuf.st_size);
+        return 0;
+    }
 }

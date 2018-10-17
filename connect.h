@@ -2,12 +2,22 @@
 #define CONNECT_H_
 
 #include <stdio.h>
-#include <string>
+#include <string.h>
 #include <stdlib.h>
 #include <unordered_map>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include<fcntl.h>
 #include "def.h"
 #include "pthread.h"
 #include "util.h"
+
+typedef struct
+{
+	const char *type;
+	const char *value;
+}mime_node;
 
 struct ner_connect
 {
@@ -20,8 +30,9 @@ private:
     int http_ver;
     std::string content;
     std::string file_name;
+    bool keep_alive;
     std::unordered_map<std::string, std::string> headers;
-    
+
 public:
     ner_connect();
     ner_connect(int _fd, int _epoll_fd);
@@ -30,6 +41,7 @@ public:
     void setFd(int fd);
     int parseURI();
     int parseHeader();
+    int httpConnect();
 };
 
 #endif

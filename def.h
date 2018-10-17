@@ -8,6 +8,7 @@
 #define SERVER_SIZE 1024
 #define MAX_THREADS 1024
 #define BUFSIZE 1024 * 1024 * 1024 //1M
+#define WAIT_TIME 300
 
 #define STATE_PARSE_URI 1
 #define STATE_PARSE_HEADERS 2
