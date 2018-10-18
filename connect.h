@@ -33,12 +33,17 @@ private:
     std::string content;
     std::string file_name;
     bool keep_alive;
-    std::unordered_map<std::string, std::string> headers;
+    nerTimer* timer;
+    unordered_map<std::string, std::string> headers;
 
 public:
     ner_connect();
     ner_connect(int _fd, int _epoll_fd);
+    ~ner_connect();
+    void reset();
+    void seperateTimer();
     void handle();
+    void setTimer(nerTimer* mtimer);
     int getFd();
     void setFd(int fd);
     int parseURI();

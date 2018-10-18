@@ -31,6 +31,14 @@
         "memory": "cpp",
         "mutex": "cpp",
         "fstream": "cpp",
-        "locale": "cpp"
+        "locale": "cpp",
+        "array": "cpp",
+        "cstring": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "optional": "cpp",
+        "sstream": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp"
     }
 }

@@ -1,4 +1,5 @@
 
+
 #include <stdio.h>
 #include "threadpool.h"
 #include "def.h"
@@ -214,12 +215,12 @@ static void *threadpool_work(void *arg)
         pthread_mutex_unlock(&pool->lock);
 
         (*(task->func))(task->arg);
+        printf("thread is end\n");
 
         free(task);
     }
     pool->started--;
     pthread_mutex_unlock(&(pool->lock));
     pthread_exit(NULL);
-
     return NULL;
 }
