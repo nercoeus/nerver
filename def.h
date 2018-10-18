@@ -16,6 +16,8 @@
 #define STATE_ANALYSIS 4
 #define STATE_FINISH 5
 
+#define SERVER_STRING "Server: jdbhttpd/0.1.0\r\n"
+
 typedef enum
 {
     METHOD_GET = 1,

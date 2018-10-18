@@ -8,10 +8,12 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include<fcntl.h>
+#include <fcntl.h>
 #include "def.h"
 #include "pthread.h"
 #include "util.h"
+#include "http.h"
+#include "epoll.h"
 
 typedef struct
 {
