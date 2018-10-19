@@ -3,7 +3,6 @@
 #include <sys/stat.h>
 using namespace std;
 
-pthread_mutex_t qlock = PTHREAD_MUTEX_INITIALIZER;
 priority_queue<nerTimer*, deque<nerTimer*>, timerCmp> nerTimeQueue;
 
 unordered_map<std::string, std::string> ner_mime =
@@ -167,11 +166,10 @@ void ner_connect::handle()
         }
     }
 
-    pthread_mutex_lock(&qlock);
+    nerMutexLock();
     nerTimer *mtimer = new nerTimer(this, 500);
     timer = mtimer;
     nerTimeQueue.push(mtimer);
-    pthread_mutex_unlock(&qlock);
     struct epoll_event event;
 
     __uint32_t _epo_event = EPOLLIN | EPOLLET | EPOLLONESHOT;

@@ -88,9 +88,8 @@ int main(int argc, char **argv)
                 epoll_add(epoll_fd, client_fd, &event);
                 nerTimer *mtimer = new nerTimer(connect_data, 500);
                 connect_data->setTimer(mtimer);
-                pthread_mutex_lock(&qlock);
+                nerMutexLock();
                 nerTimeQueue.push(mtimer);
-                pthread_mutex_unlock(&qlock);
             }
             else
             {
@@ -105,7 +104,7 @@ int main(int argc, char **argv)
                 threadpool_add(pool, ner_handle, events[i].data.ptr);
             }
         }
-        pthread_mutex_lock(&qlock);
+        nerMutexLock();
         while (!nerTimeQueue.empty())
         {
             nerTimer *ptimer_now = nerTimeQueue.top();
@@ -124,7 +123,7 @@ int main(int argc, char **argv)
                 break;
             }
         }
-        pthread_mutex_unlock(&qlock);
+        
 
         //handle_events(epoll_fd, server_fd, events, nums, pool);
     }
