@@ -1,13 +1,31 @@
-#ifndef EPOLL_H_
-#define EPOLL_H_
+#pragma once
 
-#include <sys/epoll.h>
+#include "connect.h"
+#include "sock.hpp"
 #include "def.h"
+#include <sys/epoll.h>
+#include <memory>
+#include <vector>
 
-int epoll_init(int flags);
-int epoll_add(int epoll_fd, int fd, struct epoll_event *event);
-int epoll_mod(int epoll_fd, int fd, struct epoll_event *event);
-int epoll_del(int epoll_fd, int fd, struct epoll_event *event);
-int ner_epoll_wait(int epoll_fd, struct epoll_event *event, int max_events, int timeout);
+typedef std::shared_ptr<ner_connect> con_ptr;
+//这里只设置了1024个FD支持;下一步可以写成json文件配置
+const int MAX_FD = 1024;
 
-#endif
+class ner_epoll
+{
+public:
+
+private:
+    epoll_event *events;
+    int epoll_fd;
+    con_ptr fd_con[MAX_FD];
+
+public:
+    int epoll_init(int listen_num);
+    int epoll_add(int fd, con_ptr con, uint32_t events);
+    int epoll_mod(int fd, con_ptr con, uint32_t events);
+    int epoll_del(int fd, con_ptr con, uint32_t events);
+    int ner_poll_wait(int server_fd, int max_events, int timeout);
+
+    std::vector<con_ptr> getEvents(int server_fd, int nums);
+}

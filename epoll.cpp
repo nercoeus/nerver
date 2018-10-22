@@ -1,44 +1,88 @@
 #include "epoll.h"
+#include <stdio.h>
+#include <memory>
 
-//struct epoll_event* events;
-
-int epoll_init(int flags){
-    int epoll_fd = epoll_create(flags);
-    if(epoll_fd < 0){
+int ner_epoll::epoll_init(int epoll_size)
+{
+    epoll_fd = epoll_create(1);
+    if (epoll_fd < 0)
+    {
+        perror("epoll_create is fail\n");
         return -1;
     }
-    //events = new epoll_event[MAXEVENTS];
-    return epoll_fd;
+    events = new epoll_event[epoll_size];
+    return 0;
 }
 
-int epoll_add(int epoll_fd, int fd, struct epoll_event* event){
-    int res = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, event);
-    if(res < 0){
+int ner_epoll::epoll_add(int fd, con_ptr con, uint32_t event)
+{
+    epoll_event _event;
+    _event.data.fd = fd;
+    _event.events = event;
+    fd_con[fd] = con;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &_event) < 0)
+    {
+        perror("epoll_add is fail\n");
         return -1;
     }
     return 0;
 }
 
-int epoll_mod(int epoll_fd, int fd, struct epoll_event* event){
-    int res = epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, event);
-    if(res < 0){
+int ner_epoll::epoll_mod(int fd, con_ptr con, uint32_t event)
+{
+    epoll_event _event;
+    _event.data.fd = fd;
+    _event.events = event;
+    fd_con[fd] = con;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &_event) < 0)
+    {
+        perror("epoll_mod is fail\n");
+        fd_con[fd].reset();
         return -1;
     }
     return 0;
 }
 
-int epoll_del(int epoll_fd, int fd, struct epoll_event* event){
-    int res = epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, event);
-    if(res < 0){
+int ner_epoll::epoll_del(int fd, con_ptr con, uint32_t event)
+{
+    epoll_event _event;
+    _event.data.fd = fd;
+    _event.events = event;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, &_event) < 0)
+    {
+        perror("epoll_del is fail\n");
         return -1;
     }
+    fd_con[fd].reset();
     return 0;
 }
 
-int ner_epoll_wait(int epoll_fd, struct epoll_event *events, int max_events, int timeout){
-    int res = epoll_wait(epoll_fd, events, max_events, timeout);
-    if(res < 0){
-        return -1;
+int ner_epoll::ner_poll_wait(int server_fd, int max_events, int timeout)
+{
+    int nums = epoll_wait(epoll_fd, events, max_events, timeout);
+    std::vector<con_ptr> cons = getEvents(server_fd, nums);
+    for (int i = 0; i < nums; i++)
+    {
     }
-    return res;
+}
+
+std::vector<con_ptr> ner_epoll::getEvents(int fd, int nums)
+{
+    std::vector<con_ptr> res;
+    for (int i = 0; i < nums, i++)
+    {
+        int t_fd = events[i].data.fd;
+
+        if (t_fd == fd)
+        {
+            int acc_fd = acceptConnect(fd);
+            con_ptr t_ptr(new ner_connect());
+            uint32_t _events = EPOLLIN | EPOLLET | EPOLLONESHOT;
+            epoll_add(acc_fd, t_ptr, _events);
+            //超时设置
+        }
+        else
+        {
+        }
+    }
 }

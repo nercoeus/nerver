@@ -3,6 +3,8 @@
 #include <sys/stat.h>
 using namespace std;
 
+priority_queue<nerTimer*, deque<nerTimer*>, timerCmp> nerTimeQueue;
+
 unordered_map<std::string, std::string> ner_mime =
     {
         {".html", "text/html"},
@@ -35,14 +37,29 @@ inline string ner_mime_type2value(string type)
 
 ner_connect::ner_connect()
     : fd(0), epoll_fd(0), state(STATE_PARSE_URI), mark(0), method(0)
-    , file_name("web/")
+    , file_name("web/"), timer(NULL)
 {
 }
 
 ner_connect::ner_connect(int _fd, int _epoll_fd)
     : fd(_fd), epoll_fd(_epoll_fd), state(STATE_PARSE_URI), mark(0), method(0)
-    , file_name("web/")
+    , file_name("web/"), timer(NULL)
 {
+}
+
+ner_connect::~ner_connect(){
+    cout << "调用析构函数" << endl;
+    struct epoll_event ev;
+    // 超时的一定都是读请求，没有"被动"写。
+    ev.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
+    ev.data.ptr = (void*)this;
+    epoll_del(epoll_fd, fd, &ev);
+    if (timer != NULL)
+    {
+        timer->clearReq();
+        timer = NULL;
+    }
+    close(fd);
 }
 
 void ner_connect::setFd(int _fd)
@@ -53,6 +70,15 @@ void ner_connect::setFd(int _fd)
 int ner_connect::getFd()
 {
     return this->fd;
+}
+
+void ner_connect::seperateTimer()
+{
+    if (timer)
+    {
+        timer->clearReq();
+        timer = NULL;
+    }
 }
 
 void ner_connect::handle()
@@ -126,6 +152,36 @@ void ner_connect::handle()
             }
         }
     }
+    if (state == STATE_FINISH)
+    {
+        if (keep_alive)
+        {
+            printf("ok\n");
+            this->reset();
+        }
+        else
+        {
+            delete this;
+            return;
+        }
+    }
+
+    nerMutexLock();
+    nerTimer *mtimer = new nerTimer(this, 500);
+    timer = mtimer;
+    nerTimeQueue.push(mtimer);
+    struct epoll_event event;
+
+    __uint32_t _epo_event = EPOLLIN | EPOLLET | EPOLLONESHOT;
+    event.events = _epo_event;
+    event.data.ptr = (void *)this;
+    int ret = epoll_mod(epoll_fd, fd, &event);
+    if (ret < 0)
+    {
+        // 返回错误处理
+        delete this;
+        return;
+    }
     cout<<"connect is down"<<endl;
     //epoll_event _event;
     //_event.data.ptr = this;
@@ -137,6 +193,15 @@ void ner_connect::handle()
     //    delete this;
     //    return;
     //}
+}
+
+void ner_connect::reset()
+{
+    content.clear();
+    file_name.clear();
+    state = STATE_PARSE_URI;
+    headers.clear();
+    keep_alive = false;
 }
 
 int ner_connect::parseURI()
@@ -350,3 +415,9 @@ int ner_connect::httpConnect()
     }
 }
 
+
+void ner_connect::setTimer(nerTimer* mtimer){
+    if(timer == NULL){
+        timer = mtimer;
+    }
+}

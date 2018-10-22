@@ -56,3 +56,74 @@ void httpError404(int client)
     }
     munmap(src_addr, sbuf.st_size);
 }
+
+
+nerTimer::nerTimer(ner_connect *connect_data, int timeout): 
+    deleted(false), connect_data(connect_data)
+{
+    //cout << "nerTimer()" << endl;
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    // 以毫秒计
+    expired_time = ((now.tv_sec * 1000) + (now.tv_usec / 1000)) + timeout;
+}
+
+nerTimer::~nerTimer()
+{
+    cout << "~nerTimer()" << endl;
+    if (connect_data != NULL)
+    {
+        cout << "connect_data = " << connect_data << endl;
+        delete connect_data;
+        connect_data = NULL;
+    }
+}
+
+void nerTimer::update(int timeout)
+{
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    expired_time = ((now.tv_sec * 1000) + (now.tv_usec / 1000)) + timeout;
+}
+
+bool nerTimer::isvalid()
+{
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    size_t temp = ((now.tv_sec * 1000) + (now.tv_usec / 1000));
+    if (temp < expired_time)
+    {
+        return true;
+    }
+    else
+    {
+        this->setDeleted();
+        return false;
+    }
+}
+
+void nerTimer::clearReq()      //这里并没有析构connect_data
+{
+    connect_data = NULL;
+    this->setDeleted();
+}
+
+void nerTimer::setDeleted()
+{
+    deleted = true;
+}
+
+bool nerTimer::isDeleted() const
+{
+    return deleted;
+}
+
+size_t nerTimer::getExpTime() const
+{
+    return expired_time;
+}
+
+bool timerCmp::operator()(const nerTimer *a, const nerTimer *b) const
+{
+    return a->getExpTime() > b->getExpTime();
+}

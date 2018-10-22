@@ -1,10 +1,8 @@
-#ifndef THREADPOOL_H_
-#define THREADPOOL_H_
-
+#pragma once
 #include <pthread.h>
-#include <stdlib.h>
-#include "def.h"
+#include <vector>
 
+const int MAX_THREADS = 1024;
 //最大线程池初始化大小以及任务队列大小
 struct ner_task;
 
@@ -35,7 +33,7 @@ struct ner_task
 };
 
 //定义线程池结构体
-typedef struct
+struct ner_threadpool
 {
     pthread_mutex_t lock; //互斥锁
     pthread_cond_t cond;  //信号量
@@ -45,12 +43,14 @@ typedef struct
     int task_size;        //等待任务数量
     int shutdown;         //线程池状态
     int started;          //线程池开始位置
-} ner_threadpool;
+
+    
+};
 
 //线程池API
+
 ner_threadpool *threadpool_create(int thread_count);
 int threadpool_add(ner_threadpool *ner_pool, void (*func)(void *), void *argument);
 int threadpool_destroy(ner_threadpool *ner_pool, int graceful);
 int threadpool_free(ner_threadpool *pool);
-static void *threadpool_work(void *arg);
-#endif
+void * threadpool_work(void *arg);

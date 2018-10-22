@@ -1,10 +1,8 @@
-
-
 #include <stdio.h>
+#include <malloc.h>
 #include "threadpool.h"
-#include "def.h"
 
-ner_threadpool *threadpool_create(int thread_count)
+ner_threadpool * threadpool_create(int thread_count)
 {
     if (thread_count <= 0 || thread_count > MAX_THREADS)
     {
@@ -176,7 +174,7 @@ int threadpool_free(ner_threadpool *pool)
 }
 
 //传入ner_threadpool*类型的参数
-static void *threadpool_work(void *arg)
+void * threadpool_work(void *arg)
 {
     printf("%lu\n", pthread_self());
     if (arg == NULL)

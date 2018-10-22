@@ -2,7 +2,18 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <pthread.h>
 #include <string.h>
+pthread_mutex_t nerMutexLock::lock = PTHREAD_MUTEX_INITIALIZER;
+nerMutexLock::nerMutexLock()
+{
+    pthread_mutex_lock(&lock);
+}
+
+nerMutexLock::~nerMutexLock()
+{
+    pthread_mutex_unlock(&lock);
+}
 
 ssize_t readn(int fd, void *buf, size_t n)
 {
