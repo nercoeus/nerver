@@ -65,7 +65,7 @@ err:
     return NULL;
 }
 
-int threadpool_add(ner_threadpool *pool, void (*func)(void *), void *arg)
+int threadpool_add(ner_threadpool *pool, void (*func)(std::shared_ptr<void>), std::shared_ptr<void> arg)
 {
     int rc, er = 0;
     if (pool == NULL || func == NULL)

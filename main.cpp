@@ -1,9 +1,5 @@
-#include "util.hpp"
-#include "def.h"
-#include "sock.hpp"
-#include "connect.h"
 #include "epoll.h"
-#include "threadpool.h"
+#include "util.h"
 
 
 int main()
@@ -35,13 +31,13 @@ int main()
     
     con_ptr t_con(new ner_connect());
     t_con->setFd(server_fd);
-    
+
     if(epoll->epoll_add(server_fd, t_con, EPOLLIN | EPOLLET) == -1){
         fprintf(stderr, "epoll_add() is fail.\n");
         return 1;
     }
     while(1){
-        epoll->ner_poll_wait(server_fd, EVENTS_SIZE, -1);
+        epoll->ner_poll_wait(server_fd, EVENTS_SIZE, -1, pool);
     }
     return 0;
 }

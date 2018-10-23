@@ -1,13 +1,4 @@
-#pragma once
-
-#include "util.h"
-#include "def.h"
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <unistd.h>
-#include <memory.h>
-#include <stdio.h>
+#include "sock.h"
 
 int serverfdInit(int port)
 {
@@ -18,10 +9,9 @@ int serverfdInit(int port)
     }
     else
     {
-        int flag = 0;
         int server_fd = 0;
-        flag = socket(AF_INET, SOCK_STREAM, 0);
-        if (flag == -1)
+        server_fd = socket(AF_INET, SOCK_STREAM, 0);
+        if (server_fd == -1)
         {
             fprintf(stderr, "socket() fail\n");
             return -1;

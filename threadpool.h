@@ -1,5 +1,6 @@
 #pragma once
 #include <pthread.h>
+#include <memory>
 #include <vector>
 
 const int MAX_THREADS = 1024;
@@ -27,8 +28,8 @@ typedef enum
 //任务结构体,包含函数指针以及参数列表
 struct ner_task
 {
-    void (*func)(void *);
-    void *arg;
+    void (*func)(std::shared_ptr<void>);
+    std::shared_ptr<void> arg;
     ner_task *next;
 };
 
@@ -43,14 +44,12 @@ struct ner_threadpool
     int task_size;        //等待任务数量
     int shutdown;         //线程池状态
     int started;          //线程池开始位置
-
-    
 };
 
 //线程池API
 
 ner_threadpool *threadpool_create(int thread_count);
-int threadpool_add(ner_threadpool *ner_pool, void (*func)(void *), void *argument);
+int threadpool_add(ner_threadpool *ner_pool, void (*func)(std::shared_ptr<void>), std::shared_ptr<void> argument);
 int threadpool_destroy(ner_threadpool *ner_pool, int graceful);
 int threadpool_free(ner_threadpool *pool);
 void * threadpool_work(void *arg);

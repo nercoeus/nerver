@@ -1,6 +1,11 @@
 #include "epoll.h"
-#include <stdio.h>
-#include <memory>
+
+
+void nerHandle(std::shared_ptr<void> req)
+{
+    std::shared_ptr<ner_connect> t_con = std::static_pointer_cast<ner_connect>(req);
+    t_con->handle();
+}
 
 int ner_epoll::epoll_init(int epoll_size)
 {
@@ -57,19 +62,28 @@ int ner_epoll::epoll_del(int fd, con_ptr con, uint32_t event)
     return 0;
 }
 
-int ner_epoll::ner_poll_wait(int server_fd, int max_events, int timeout)
+int ner_epoll::ner_poll_wait(int server_fd, int max_events,
+                             int timeout, ner_threadpool *pool)
 {
     int nums = epoll_wait(epoll_fd, events, max_events, timeout);
+    //这里的events已经剔除了连接事件,仅仅处理输入输出事件.
     std::vector<con_ptr> cons = getEvents(server_fd, nums);
-    for (int i = 0; i < nums; i++)
+    if (cons.size() > 0)
     {
+        for (auto &con : cons)
+        {
+            int flag;
+            if((flag = threadpool_add(pool, nerHandle, con)) < 0){
+                break;
+            }
+        }
     }
 }
 
 std::vector<con_ptr> ner_epoll::getEvents(int fd, int nums)
 {
     std::vector<con_ptr> res;
-    for (int i = 0; i < nums, i++)
+    for (int i = 0; i < nums; i++)
     {
         int t_fd = events[i].data.fd;
 
@@ -87,25 +101,28 @@ std::vector<con_ptr> ner_epoll::getEvents(int fd, int nums)
             if ((events[i].events & EPOLLERR) || (events[i].events & EPOLLHUP))
             {
                 printf("error event\n");
-                if (fd_con[fd])
-                    fd_con[fd]->seperateTimer();
+                //if (fd_con[fd])
+                //    fd_con[fd]->seperateTimer();
                 fd_con[fd].reset();
                 continue;
             }
 
             con_ptr t_con = fd_con[fd];
-            if(t_con) {
-                if((events[i].events & EPOLLIN) || (events[i].events & EPOLLPRI))
+            if (t_con)
+            {
+                if ((events[i].events & EPOLLIN) || (events[i].events & EPOLLPRI))
                 {
-                    t_con->enableRead();
+                    t_con->setStation(EPOLL_IN);
                 }
-                else {
-                    t_con->enableRead();
+                else
+                {
+                    t_con->setStation(EPOLL_OUT);
                 }
                 res.push_back(t_con);
                 fd_con[fd].reset();
             }
-            else {
+            else
+            {
                 fprintf(stderr, "get fd error\n");
             }
         }

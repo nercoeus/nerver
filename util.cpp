@@ -1,10 +1,4 @@
-#pragma once
-
-#include <stdio.h>
-#include <string.h>
-#include <signal.h>
-#include <fcntl.h>
-
+#include "util.h"
 static void signalHandler(int nSigno)
 {
     signal(nSigno, signalHandler);
@@ -18,7 +12,7 @@ static void signalHandler(int nSigno)
         break;
     }
 }
-static void ignSigpipe()
+void ignSigpipe()
 {
     signal(SIGPIPE, &signalHandler);
 }
