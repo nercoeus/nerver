@@ -83,6 +83,32 @@ std::vector<con_ptr> ner_epoll::getEvents(int fd, int nums)
         }
         else
         {
+            // 排除错误事件
+            if ((events[i].events & EPOLLERR) || (events[i].events & EPOLLHUP))
+            {
+                printf("error event\n");
+                if (fd_con[fd])
+                    fd_con[fd]->seperateTimer();
+                fd_con[fd].reset();
+                continue;
+            }
+
+            con_ptr t_con = fd_con[fd];
+            if(t_con) {
+                if((events[i].events & EPOLLIN) || (events[i].events & EPOLLPRI))
+                {
+                    t_con->enableRead();
+                }
+                else {
+                    t_con->enableRead();
+                }
+                res.push_back(t_con);
+                fd_con[fd].reset();
+            }
+            else {
+                fprintf(stderr, "get fd error\n");
+            }
         }
     }
+    return res;
 }
